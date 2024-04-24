@@ -8,11 +8,18 @@ import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import Button from '@mui/material/Button';
 import { signOut } from "firebase/auth";
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../store/slices/usersSlice';
+import { doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { User } from '../types/User';
 
-export default function Header() {
+interface Props {
+  authorizedUser: User | null,
+  setAuthorizedUser: (param: User | null) => void // Змінив тип setAuthorizedUser
+}
+
+export const Header: React.FC<Props> = ({ authorizedUser, setAuthorizedUser }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const dispatch = useDispatch();
 
@@ -33,6 +40,27 @@ export default function Header() {
     setAnchorEl(null);
   };
 
+  const handleAddNewCity = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.preventDefault();
+
+    const newCityName = prompt("Enter the name of the new city:");
+
+    if (newCityName && !!authorizedUser && !authorizedUser?.cities.includes(newCityName)) {
+      const userRef = doc(db, "users", authorizedUser.id);
+
+      try {
+        await updateDoc(userRef, {
+          cities: arrayUnion(newCityName)
+        });
+        if (authorizedUser) {
+          setAuthorizedUser({ ...authorizedUser, cities: [...authorizedUser.cities, newCityName] });
+        }
+      } catch (error) {
+        console.error("Error adding new city:", error);
+      }
+    }
+  };
+
   return (
     <AppBar position="static">
       <Toolbar>
@@ -49,7 +77,7 @@ export default function Header() {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => console.log('Add new city button clicked')} // Додати функціонал
+          onClick={(event) => handleAddNewCity(event)} // Додати функціонал
           sx={{
             borderRadius: '4px',
             textTransform: 'none',

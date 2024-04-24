@@ -10,16 +10,17 @@ interface Props {
   setIsLoading: (param: boolean) => void,
 }
 
-export const SignUp: React.FC<Props> = ({isLoading, setIsLoading}) => {
+export const SignUp: React.FC<Props> = ({ isLoading, setIsLoading }) => {
   const dispatch = useDispatch();
   const [signUpError, setSignUpError] = useState('');
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
       dispatch(setUser({
-          id: user.uid,
-          email: user.email,
-        }));
+        id: user.uid,
+        email: user.email,
+        cities: ['Kyiv'],
+      }));
     } else {
       dispatch(setUser(null));
     }
@@ -27,8 +28,8 @@ export const SignUp: React.FC<Props> = ({isLoading, setIsLoading}) => {
     isLoading && setIsLoading(false);
   });
 
-  const handleSignUp = (
-    event: React.MouseEvent<HTMLButtonElement,MouseEvent>,
+  const handleSignUp = async (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     email: string,
     password: string,
   ) => {
@@ -47,7 +48,7 @@ export const SignUp: React.FC<Props> = ({isLoading, setIsLoading}) => {
     <>
       <Form buttonTitle="Sign up" handleClick={handleSignUp} setSignUpError={setSignUpError} />
       {signUpError && (
-        <div style={{color: 'red', textAlign: 'center'}}>{signUpError}</div>
+        <div style={{ color: 'red', textAlign: 'center' }}>{signUpError}</div>
       )}
     </>
   );

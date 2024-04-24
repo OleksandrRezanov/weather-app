@@ -8,7 +8,6 @@ import { selectUsers } from "./store/slices/usersSlice";
 
 export const Root = () => {
   const user = useSelector(selectUsers);
-  console.log(user.currentUser);
 
   return (
     <Router>
@@ -22,7 +21,7 @@ export const Root = () => {
         </Routes>
       ) : (
         <Routes>
-          <Route path="/" element={<Navigate to="/register" />} />
+          <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<LoginPage />} />
