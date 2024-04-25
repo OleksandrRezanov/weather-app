@@ -2,8 +2,9 @@ import { useDispatch } from "react-redux";
 import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import Form from "./Form";
 import { setUser } from '../store/slices/usersSlice';
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import React, { useState } from "react";
+import { collection, addDoc } from "firebase/firestore";
 
 interface Props {
   isLoading: boolean,
@@ -16,11 +17,28 @@ export const SignUp: React.FC<Props> = ({ isLoading, setIsLoading }) => {
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      dispatch(setUser({
-        id: user.uid,
-        email: user.email,
-        cities: ['Kyiv'],
-      }));
+
+      const createUserInDb = async (): Promise<void> => {
+        try {
+          const docRef = await addDoc(collection(db, "users"), {
+            email: user.email,
+            cities: ['Kyiv'],
+          });
+          console.log("Document written with ID: ", docRef.id);
+
+          dispatch(setUser({
+            id: user.uid,
+            email: user.email,
+            docId: docRef.id,
+            cities: ['Kyiv'],
+          }));
+        } catch (error) {
+          console.error('Error fetching users from database:', error);
+        }
+      };
+
+      createUserInDb();
+
     } else {
       dispatch(setUser(null));
     }

@@ -2,8 +2,10 @@ import { useDispatch } from "react-redux";
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import Form from "./Form";
 import { setUser } from '../store/slices/usersSlice';
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { User } from "../types/User";
 
 interface Props {
   isLoading: boolean,
@@ -16,10 +18,29 @@ export const Login: React.FC<Props> = ({ isLoading, setIsLoading }) => {
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      dispatch(setUser({
-        id: user.uid,
-        email: user.email,
-      }));
+      const getUserFromDb = async (): Promise<void> => {
+        try {
+          const querySnapshot = await getDocs(collection(db, "users"));
+          const usersFromDb: User[] = querySnapshot.docs.map((doc): User => ({ id: doc.id, ...doc.data() } as User));
+          const currentUserFromDb: User | undefined = usersFromDb.find((userFromDb: User): boolean => userFromDb.email === user.email);
+      
+          if (currentUserFromDb) {
+            dispatch(setUser({
+              id: user.uid,
+              email: user.email,
+              docId: currentUserFromDb.id,
+              cities: currentUserFromDb.cities,
+            }));
+          } else {
+            throw new Error('User not found');
+          }
+        } catch (error) {
+          console.error('Error fetching users from database:', error);
+        }
+      };
+
+      getUserFromDb();
+
     } else {
       dispatch(setUser(null));
     }

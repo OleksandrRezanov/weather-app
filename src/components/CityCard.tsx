@@ -11,7 +11,6 @@ import bgImage from '../img/sun-with-cloude.jpg';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectUsers, setUser } from '../store/slices/usersSlice';
-import { User } from '../types/User';
 import { WeatherData } from '../types/WeatherData';
 import { db } from '../firebase';
 import { doc, updateDoc, arrayRemove } from "firebase/firestore";
@@ -20,8 +19,6 @@ const apiKey = process.env.REACT_APP_OPEN_WEATHER_API_KEY;
 const units = 'metric';
 
 interface Props {
-  authorizedUser: User | null,
-  setAuthorizedUser: (param: User | null) => void,
   city: string,
 }
 
@@ -36,10 +33,10 @@ const initialWeatherData = {
   temp_min: 0,
 };
 
-const CityCard: React.FC<Props> = ({ authorizedUser, setAuthorizedUser, city }) => {
+const CityCard: React.FC<Props> = ({ city }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [weatherData, setWeatherData] = useState<WeatherData>(initialWeatherData);
-  const registeredUser = useSelector(selectUsers);
+  const registeredUser = useSelector(selectUsers).currentUser;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,17 +76,17 @@ const CityCard: React.FC<Props> = ({ authorizedUser, setAuthorizedUser, city }) 
   const handleDeleteCity = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
 
-    if (!!authorizedUser) {
-      const userRef = doc(db, "users", authorizedUser.id);
+    if (!!registeredUser) {
+      const userRef = doc(db, "users", registeredUser.docId);
 
       try {
         await updateDoc(userRef, {
           cities: arrayRemove(city)
         });
-        if (authorizedUser) {
-          const citiesWithoutDeleted = authorizedUser.cities.filter(item => item !== city);
-          setAuthorizedUser({ ...authorizedUser, cities: citiesWithoutDeleted });
-        }
+
+        const citiesWithoutDeleted = registeredUser.cities.filter((item: string) => item !== city);
+        dispatch(setUser({ ...registeredUser, cities: citiesWithoutDeleted }));
+
       } catch (error) {
         console.error("Error adding new city:", error);
       }

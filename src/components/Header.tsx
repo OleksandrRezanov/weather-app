@@ -9,19 +9,14 @@ import Menu from '@mui/material/Menu';
 import Button from '@mui/material/Button';
 import { signOut } from "firebase/auth";
 import { auth, db } from '../firebase';
-import { useDispatch } from 'react-redux';
-import { setUser } from '../store/slices/usersSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectUsers, setUser } from '../store/slices/usersSlice';
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { User } from '../types/User';
 
-interface Props {
-  authorizedUser: User | null,
-  setAuthorizedUser: (param: User | null) => void
-}
-
-export const Header: React.FC<Props> = ({ authorizedUser, setAuthorizedUser }) => {
+export const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const dispatch = useDispatch();
+  const registeredUser = useSelector(selectUsers).currentUser;
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -45,16 +40,15 @@ export const Header: React.FC<Props> = ({ authorizedUser, setAuthorizedUser }) =
 
     const newCityName = prompt("Enter the name of the new city:");
 
-    if (newCityName && !!authorizedUser && !authorizedUser?.cities.includes(newCityName)) {
-      const userRef = doc(db, "users", authorizedUser.id);
+    if (newCityName && !!registeredUser && !registeredUser.cities.includes(newCityName)) {
+      const userRef = doc(db, "users", registeredUser.docId);
 
       try {
         await updateDoc(userRef, {
           cities: arrayUnion(newCityName)
         });
-        if (authorizedUser) {
-          setAuthorizedUser({ ...authorizedUser, cities: [...authorizedUser.cities, newCityName] });
-        }
+
+        dispatch(setUser({ ...registeredUser, cities: [...registeredUser.cities, newCityName] }));
       } catch (error) {
         console.error("Error adding new city:", error);
       }
