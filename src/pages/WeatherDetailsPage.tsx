@@ -6,9 +6,7 @@ import {
   Button,
 } from '@mui/material';
 import bgImage from '../img/sun-with-cloude.jpg';
-import { useSelector } from 'react-redux';
-import { selectUsers} from '../store/slices/usersSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const apiKey = process.env.REACT_APP_OPEN_WEATHER_API_KEY;
 const units = 'metric';
@@ -62,9 +60,9 @@ const weatherDataStyle = { fontSize: '30px' };
 export const WeatherDetailsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [weatherData, setWeatherData] = useState<WeatherData>(initialWeatherData);
-  const registeredUser = useSelector(selectUsers);
-  const cityForDetails = registeredUser.currentUser.city;
   const navigate = useNavigate();
+  const params = useParams();
+  const cityForDetails = params.cityDetails;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,7 +93,9 @@ export const WeatherDetailsPage: React.FC = () => {
 
   const handleUpdateWeather = async () => {
     setIsLoading(true);
-    await onUpdateWeather(cityForDetails);
+    if (cityForDetails) {
+      await onUpdateWeather(cityForDetails);
+    }
     setIsLoading(false);
   };
 

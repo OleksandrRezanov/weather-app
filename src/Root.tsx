@@ -16,7 +16,7 @@ export const Root = () => {
             <Route path="/" element={<Navigate to="/weatherApp" />} />
             <Route path="/weatherApp" element={<Outlet />}>
               <Route index element={<App />} />
-              <Route path="details" element={<WeatherDetailsPage />} />
+              <Route path=":cityDetails" element={<WeatherDetailsPage />} />
             </Route>
           </Routes>
         </Router>

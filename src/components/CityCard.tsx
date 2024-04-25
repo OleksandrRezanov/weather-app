@@ -96,7 +96,7 @@ const CityCard: React.FC<Props> = ({ city }) => {
   const onDetail = () => {
     dispatch(setUser({ ...registeredUser, city }));
 
-    navigate('details');
+    navigate(`/weatherApp/${city}`);
   };
 
   return (
