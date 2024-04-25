@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 import { selectUsers} from '../store/slices/usersSlice';
 import { useNavigate } from 'react-router-dom';
 
-const apiKey = '7bafd2826dbe7f0753911f8e8a5cd45f';
+const apiKey = process.env.REACT_APP_OPEN_WEATHER_API_KEY;
 const units = 'metric';
 
 
@@ -109,7 +109,7 @@ export const WeatherDetailsPage: React.FC = () => {
         variant="contained"
         onClick={handleBackToApp}
       >
-        Back to WeatherAPP
+        ← Back to WeatherAPP
       </Button>
 
       <Card sx={cardStyles} >

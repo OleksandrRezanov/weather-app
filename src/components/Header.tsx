@@ -16,7 +16,7 @@ import { User } from '../types/User';
 
 interface Props {
   authorizedUser: User | null,
-  setAuthorizedUser: (param: User | null) => void // Змінив тип setAuthorizedUser
+  setAuthorizedUser: (param: User | null) => void
 }
 
 export const Header: React.FC<Props> = ({ authorizedUser, setAuthorizedUser }) => {

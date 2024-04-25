@@ -9,8 +9,6 @@ import { selectUsers } from './store/slices/usersSlice';
 import { useSelector } from 'react-redux';
 import { User } from './types/User';
 
-const onDeleteCity = () => { };
-
 const App: React.FC = () => {
   const [authorizedUser, setAuthorizedUser] = useState<User | null>(null);
 
@@ -45,7 +43,7 @@ const App: React.FC = () => {
       <div style={{padding: '20px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px'}}>
         <Outlet />
         {authorizedUser?.cities.map(city => (
-          <CityCard key={city} city={city} onDeleteCity={onDeleteCity} />
+          <CityCard key={city} authorizedUser={authorizedUser} setAuthorizedUser={setAuthorizedUser} city={city} />
         ))}
       </div>
     </>

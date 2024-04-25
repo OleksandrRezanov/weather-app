@@ -11,35 +11,18 @@ import bgImage from '../img/sun-with-cloude.jpg';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectUsers, setUser } from '../store/slices/usersSlice';
+import { User } from '../types/User';
+import { WeatherData } from '../types/WeatherData';
+import { db } from '../firebase';
+import { doc, updateDoc, arrayRemove } from "firebase/firestore";
 
-const apiKey = '7bafd2826dbe7f0753911f8e8a5cd45f';
+const apiKey = process.env.REACT_APP_OPEN_WEATHER_API_KEY;
 const units = 'metric';
 
-
-const onUpdateWeather = async (city: string): Promise<void> => {
-  try {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=${units}`);
-    const data = await response.json();
-    console.log('Updated weather data for', city, ':', data);
-  } catch (error) {
-    console.error('Error updating weather data:', error);
-  }
-};
-
-interface WeatherCardProps {
-  city: string;
-  onDeleteCity: (city: string) => void;
-}
-
-interface WeatherData {
-  feels_like: number;
-  grnd_level: number;
-  humidity: number;
-  pressure: number;
-  sea_level: number;
-  temp: number;
-  temp_max: number;
-  temp_min: number;
+interface Props {
+  authorizedUser: User | null,
+  setAuthorizedUser: (param: User | null) => void,
+  city: string,
 }
 
 const initialWeatherData = {
@@ -53,41 +36,64 @@ const initialWeatherData = {
   temp_min: 0,
 };
 
-const CityCard: React.FC<WeatherCardProps> = ({ city, onDeleteCity }) => {
+const CityCard: React.FC<Props> = ({ authorizedUser, setAuthorizedUser, city }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [weatherData, setWeatherData] = useState<WeatherData>(initialWeatherData);
-  const navigate = useNavigate();
   const registeredUser = useSelector(selectUsers);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
 
-      try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=${units}`);
-        const data = await response.json();
-        setWeatherData(data.main);
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-      }
+      onUpdateWeather();
 
       setIsLoading(false);
     };
 
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const onUpdateWeather = async (): Promise<void> => {
+    try {
+      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=${units}`);
+      const data = await response.json();
+      setWeatherData(data.main);
+      console.log('Updated weather data for', city, ':', data);
+    } catch (error) {
+      console.error('Error updating weather data:', error);
+    }
+  };
 
   const { temp, feels_like } = weatherData;
   const dispatch = useDispatch();
 
-  const handleUpdateWeather = async () => {
+  const handleUpdateWeather = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.stopPropagation();
     setIsLoading(true);
-    await onUpdateWeather(city);
+    await onUpdateWeather();
     setIsLoading(false);
   };
 
-  const handleDeleteCity = () => {
-    onDeleteCity(city);
+  const handleDeleteCity = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.stopPropagation();
+
+    if (!!authorizedUser) {
+      const userRef = doc(db, "users", authorizedUser.id);
+
+      try {
+        await updateDoc(userRef, {
+          cities: arrayRemove(city)
+        });
+        if (authorizedUser) {
+          const citiesWithoutDeleted = authorizedUser.cities.filter(item => item !== city);
+          setAuthorizedUser({ ...authorizedUser, cities: citiesWithoutDeleted });
+        }
+      } catch (error) {
+        console.error("Error adding new city:", error);
+      }
+    }
   };
 
   const onDetail = () => {
@@ -113,7 +119,7 @@ const CityCard: React.FC<WeatherCardProps> = ({ city, onDeleteCity }) => {
 
         <Button
           variant="outlined"
-          onClick={handleUpdateWeather}
+          onClick={(event) => handleUpdateWeather(event)}
           disabled={isLoading}
           sx={{
             color: 'black',
@@ -126,7 +132,7 @@ const CityCard: React.FC<WeatherCardProps> = ({ city, onDeleteCity }) => {
         </Button>
 
 
-        <IconButton onClick={handleDeleteCity} sx={{ color: 'red' }}>
+        <IconButton onClick={(event) => handleDeleteCity(event)} sx={{ color: 'red' }}>
           <DeleteIcon fontSize="large" />
         </IconButton>
       </CardContent>
